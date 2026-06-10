@@ -1,17 +1,21 @@
 import pytest
 from main import main
+import runpy
 
 class TestMain:
     @pytest.fixture(autouse=True)
     def _capsys(self, capsys):
         self.capsys = capsys
 
+    def test_execution_block(self,monkeypatch):
+        monkeypatch.setattr('main.main', lambda: None)
+        runpy.run_path('main.py')
+
     def test_menu_exit(self, monkeypatch):
         # Mock input to '5' so the program exits
         monkeypatch.setattr('builtins.input', lambda _: '5')
         main()
         captured = self.capsys.readouterr()
-
         # Verification that menu options get printed
         assert "1. Look up an employee" in captured.out
         assert "5. Exit" in captured.out
@@ -22,7 +26,6 @@ class TestMain:
         monkeypatch.setattr('builtins.input', lambda _: next(inputs)) 
         main()
         captured = self.capsys.readouterr()
-
         # Verification that error message gets printed
         assert "ERROR: Please enter a valid menu option." in captured.out
     
