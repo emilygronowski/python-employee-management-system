@@ -1,7 +1,7 @@
 def main():
     print("\nEmployee Management System")
     #menu loop 
-    while True: # pragma: no cover
+    while True: 
         print("\n1. Look up an employee")
         print("2. Add new employee")
         print("3. Edit employee")
@@ -27,5 +27,5 @@ def main():
             print("ERROR: Please enter a valid menu option.")
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__": 
     main()
