@@ -1,13 +1,14 @@
 import pytest
+from pytest import CaptureFixture
 from scripts.employee import Employee
 
 
 class TestEmployee:
     @pytest.fixture(autouse=True)
-    def _capsys(self, capsys):
+    def _capsys(self: TestEmployee, capsys: CaptureFixture[str]) -> None:
         self.capsys = capsys
 
-    def test_employee_instantiations(self):
+    def test_employee_instantiations(self: TestEmployee) -> None:
         employee1 = Employee("Susan Meyers", "Marketing", "Vice President")
         employee2 = Employee("Mark Jones", "IT", "Programmer")
         employee3 = Employee("Joy Rodgers", "Manufactoring", "Engineer")
