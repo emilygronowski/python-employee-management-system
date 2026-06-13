@@ -1,6 +1,6 @@
-[Home](README.md) > Building the Python Starter project
+[Home](README.md) > Building the Employee Management System project
 
-# Building the Python Starter project
+# Building the Employee Management System project
 This document provides instructions for installing required dependencies and building the development container.
 
 ## Prerequisites
@@ -11,7 +11,7 @@ This document provides instructions for installing required dependencies and bui
 1. Search and install the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
 1. If prompted after installation, relaunch Visual Studio Code.
 1. Select "File" within Visual Studio Code.
-1. Select "Open Folder..." and choose the `python-starter` project folder to open the project within Visual Studio Code.
+1. Select "Open Folder..." and choose the `python-employee-management-system` project folder to open the project within Visual Studio Code.
 
 ## Setup Instructions
 1. Ensure the [Prerequisites](#prerequisites) section has been successfully completed.
@@ -24,10 +24,10 @@ This document provides instructions for installing required dependencies and bui
 ### Using Command Palette
 1. Open the **Command Palette** by selecting "View" then "Command Palette..." or using the shortcuts `CTRL+SHIFT+P` or `F1`.
 1. Type and select `Dev Containers: Reopen in Container`.
-1. Standby for the container to build. You can track the progress by clicking "Connecting to Dev Container (show log)" link in the bottom-right notification. Visual Studio Code will open a new window with the `python-starter` project within the Dev Container.
+1. Standby for the container to build. You can track the progress by clicking "Connecting to Dev Container (show log)" link in the bottom-right notification. Visual Studio Code will open a new window with the `python-employee-management-system` project within the Dev Container.
 
 ### Exiting the Dev Container
-If you are completely finished working in the `python-starter` project, you may simply close Visual Studio Code. This will stop the running Dev Container in Docker.
+If you are completely finished working in the `python-employee-management-system` project, you may simply close Visual Studio Code. This will stop the running Dev Container in Docker.
 
 If you wish to reopen your project locally when finished working within the Dev Container, click the "Dev Container: Python Dev Container @ desktop-linux" at the bottom-left (may be blue-in-color depending on your system) and select the "Reopen Folder Locally" option in the provided menu.
 
@@ -47,8 +47,8 @@ If you wish to reopen your project locally when finished working within the Dev 
     >
     > Make sure the Docker daemon is running.
     
-    > **Corrective Action**: You have received this error because Docker Desktop is not running on your system at the time you attempted to open the `python-starter` project in a Dev Container.
+    > **Corrective Action**: You have received this error because Docker Desktop is not running on your system at the time you attempted to open the `python-employee-management-system` project in a Dev Container.
     >
-    > Relaunch Docker Desktop on your system, ensure it is running successfully and reattempt opening the `python-starter` project in a Dev Container.
+    > Relaunch Docker Desktop on your system, ensure it is running successfully and reattempt opening the `python-employee-management-system` project in a Dev Container.
 
-[Back to Top](#building-the-python-starter-project)
+[Back to Top](#building-the-employee-management-system-project)
