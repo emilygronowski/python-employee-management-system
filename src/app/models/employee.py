@@ -1,15 +1,10 @@
 class Employee:
-    def __init__(
-            self: Employee,
-            name: str,
-            department: str,
-            job_title: str
-            ) -> None:
+    def __init__(self, name: str, department: str, job_title: str) -> None:
         self.name = name
         self.department = department
         self.job_title = job_title
 
-    def __str__(self: Employee) -> str:
+    def __str__(self) -> str:
         return (
             f"Name: {self.name}\n"
             f"Department: {self.department}\n"

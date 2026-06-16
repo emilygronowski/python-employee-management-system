@@ -1,0 +1,64 @@
+[project]
+name = "python-employee-management-system"
+version = "1.0.0"
+requires-python = "~=3.14"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "coverage==7.14.1",
+    "pyright==1.1.410",
+    "pytest==9.0.3",
+    "pytest-cov==7.1.0",
+    "ruff==0.15.17"
+]
+
+[project.scripts]
+main = "app.main:main"
+
+[tool.coverage.run]
+omit = [
+    "*/__init__.py",
+    "tests/*"
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "if __name__ == .__main__.:"
+]
+
+[tool.pyright]
+extraPaths = [
+    "scripts",
+    "src"
+]
+typeCheckingMode = "strict"
+
+[tool.pytest]
+addopts = [
+    "--cov=.",
+    "--cov-branch",
+    "--cov-fail-under=90",
+    "--verbose",
+    "--durations=10",
+    "--color=yes"
+]
+testpaths = [
+    "tests"
+]
+pythonpath = [
+    "."
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "B",  # flake8-bugbear (design flaws)
+    "E",  # pycodestyle errors
+    "F",  # Pyflakes (default bug detection)
+    "I",  # isort (import sorting)
+    "UP"  # pyupgrade (modernize syntax)
+]
