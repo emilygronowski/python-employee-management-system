@@ -1,17 +1,13 @@
 class Employee:
-    _counter = 1
-
     def __init__(
             self: Employee,
             name: str,
             department: str,
             job_title: str
             ) -> None:
-        self.id = Employee._counter
         self.name = name
         self.department = department
         self.job_title = job_title
-        Employee._counter += 1
 
     def __str__(self: Employee) -> str:
         return (
