@@ -1,9 +1,9 @@
-from scripts.employee import Employee
+from app.models.employee import Employee
 
 employees = {
     1: Employee("Susan Meyers", "Accounting", "Vice President"),
     2: Employee("Mark Jones", "IT", "Programmer"),
-    3: Employee("Joy Rogers", "Manufacturing", "Engineer")
+    3: Employee("Joy Rogers", "Manufacturing", "Engineer"),
 }
 
 

@@ -33,12 +33,18 @@ If you wish to reopen your project locally when finished working within the Dev 
 
 ## Quality Assurance
 1. Ensure [Setup Instructions](#setup-instructions) section has been successfully completed.
-1. Within a new terminal, you can run `pytest` to run your test suite.
+1. Use the following commands to run linting checks and tests:
+    ```bash
+    ruff check .
+    ruff format --check .
+    pyright
+    pytest
+    ```
 
 ### Modifying the Code Coverage Threshold
-1. Open the [pytest.ini](pytest.ini) file.
-1. View line 2 for the `addopts` setting.
-1. Locate the `--cov-fail-under=90` argument.
+1. Open the [pyproject.toml](pyproject.toml) file.
+1. View line 38 for the `addopts` setting.
+1. Locate the `--cov-fail-under=90` argument on line 41.
 1. Change "90" to your preferred percentage.
 
 ## Troubleshooting
