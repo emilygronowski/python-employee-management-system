@@ -1,6 +1,7 @@
 import builtins
+import csv
 from typing import Any
-from unittest.mock import call, mock_open
+from unittest.mock import call, mock_open, patch
 
 import pytest
 from pytest import CaptureFixture, MonkeyPatch
@@ -28,14 +29,53 @@ class TestMain:
         monkeypatch.setattr("app.main.load_employees", mock_load_employees)
 
     @pytest.fixture
+    def mock_csv_data(self, monkeypatch: MonkeyPatch) -> None:
+        mock_data = [
+            ["1", "Susan Meyers", "Accounting", "Vice President"],
+            ["2", "Mark Jones", "IT", "Programmer"],
+            ["3", "Joy Rogers", "Manufacturing", "Engineer"],
+        ]
+
+        def mock_csv_reader(data: Any):
+            return mock_data
+
+        monkeypatch.setattr(csv, "reader", mock_csv_reader)
+
+    @pytest.fixture
     def mock_open_file(self, monkeypatch: MonkeyPatch) -> Any:
         mock_open_file = mock_open()
         monkeypatch.setattr(builtins, "open", mock_open_file)
         return mock_open_file
 
-    def test_load_employees_should_return_empty_dictionary(self):
+    def test_load_employees_should_return_empty_dictionary(
+        self,
+        mock_open_file: Any,
+    ) -> None:
         employees = load_employees()
         assert not employees
+
+    def test_load_employees_should_raise_filenotfounderror_and_return_empty_dictionary(
+        self,
+    ) -> None:
+        with patch("builtins.open", side_effect=FileNotFoundError):
+            employees = load_employees()
+            assert not employees
+
+    def test_load_employees_should_add_csv_data_entries_to_dictionary(
+        self, mock_csv_data: Any, mock_open_file: Any, monkeypatch: MonkeyPatch
+    ) -> None:
+        employees = load_employees()
+
+        assert len(employees) == 3
+        assert str(employees[1]) == (
+            "Name: Susan Meyers\nDepartment: Accounting\nJob Title: Vice President"
+        )
+        assert str(employees[2]) == (
+            "Name: Mark Jones\nDepartment: IT\nJob Title: Programmer"
+        )
+        assert str(employees[3]) == (
+            "Name: Joy Rogers\nDepartment: Manufacturing\nJob Title: Engineer"
+        )
 
     @pytest.mark.parametrize("choice", ["1", "2", "3", "4"])
     def test_process_menu_options(
