@@ -6,11 +6,11 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = [
-    "coverage==7.14.1",
-    "pyright==1.1.410",
-    "pytest==9.0.3",
+    "coverage==7.14.3",
+    "pyright==1.1.411",
+    "pytest==9.1.1",
     "pytest-cov==7.1.0",
-    "ruff==0.15.17"
+    "ruff==0.15.20"
 ]
 
 [project.scripts]
