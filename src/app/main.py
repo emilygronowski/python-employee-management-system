@@ -49,6 +49,25 @@ def lookup_employee(employees: dict[int, Employee]) -> None:
     print(employees[id])
 
 
+def find_available_id(employees: dict[int, Employee]) -> int:
+    index = 1
+
+    while index in employees:
+        index += 1
+
+    return index
+
+
+def add_employee(employees: dict[int, Employee]) -> None:
+    id = find_available_id(employees)
+
+    name = input("Enter employee name: ")
+    department = input("Enter department: ")
+    job_title = input("Enter job title: ")
+
+    employees[id] = Employee(name, department, job_title)
+
+
 def main() -> None:
     employees = load_employees()
     print("Employee Management System")
@@ -67,7 +86,8 @@ def main() -> None:
             case "1":
                 lookup_employee(employees)
             case "2":
-                pass
+                print()
+                add_employee(employees)
             case "3":
                 pass
             case "4":
