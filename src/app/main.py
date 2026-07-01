@@ -1,4 +1,20 @@
+from app.models.employee import Employee
+
+
+def load_employees() -> dict[int, Employee]:
+    return {}
+
+
+def save_employees(employees: dict[int, Employee]) -> None:
+    with open("employees.csv", "w") as employees_file:
+        for key, value in employees.items():
+            employees_file.write(
+                f"{key},{value.name},{value.department},{value.job_title}\n"
+            )
+
+
 def main() -> None:
+    employees = load_employees()
     print("Employee Management System")
 
     while True:
@@ -21,6 +37,7 @@ def main() -> None:
             case "4":
                 pass
             case "5":
+                save_employees(employees)
                 break
             case _:
                 print()
