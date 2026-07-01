@@ -32,6 +32,23 @@ def save_employees(employees: dict[int, Employee]) -> None:
             )
 
 
+def lookup_employee(employees: dict[int, Employee]) -> None:
+    print()
+
+    if not employees:
+        print("ERROR: No employees exist.")
+        return
+
+    id = int(input("Enter an employee ID: "))
+
+    print()
+    if id not in employees:
+        print(f"ERROR: Employee {id} does not exist.")
+        return
+
+    print(employees[id])
+
+
 def main() -> None:
     employees = load_employees()
     print("Employee Management System")
@@ -48,7 +65,7 @@ def main() -> None:
 
         match choice:
             case "1":
-                pass
+                lookup_employee(employees)
             case "2":
                 pass
             case "3":
