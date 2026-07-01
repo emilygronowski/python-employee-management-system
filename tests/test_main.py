@@ -8,6 +8,7 @@ from pytest import CaptureFixture, MonkeyPatch
 
 from app.main import (
     add_employee,
+    change_employee,
     find_available_id,
     load_employees,
     lookup_employee,
@@ -21,6 +22,20 @@ class TestMain:
     @pytest.fixture(autouse=True)
     def _capsys(self, capsys: CaptureFixture[str]) -> None:
         self.capsys = capsys
+
+    @pytest.fixture
+    def mock_add_employee(self, monkeypatch: MonkeyPatch) -> Any:
+        def mock_add_employee(employees: dict[int, Employee]):
+            pass
+
+        monkeypatch.setattr("app.main.add_employee", mock_add_employee)
+
+    @pytest.fixture
+    def mock_change_employee(self, monkeypatch: MonkeyPatch) -> Any:
+        def mock_change_employee(employees: dict[int, Employee]):
+            pass
+
+        monkeypatch.setattr("app.main.change_employee", mock_change_employee)
 
     @pytest.fixture
     def mock_csv_data(self, monkeypatch: MonkeyPatch) -> None:
@@ -65,13 +80,6 @@ class TestMain:
             pass
 
         monkeypatch.setattr("app.main.save_employees", mock_save_employees)
-
-    @pytest.fixture
-    def mock_add_employee(self, monkeypatch: MonkeyPatch) -> Any:
-        def mock_add_employee(employees: dict[int, Employee]):
-            pass
-
-        monkeypatch.setattr("app.main.add_employee", mock_add_employee)
 
     def test_load_employees_should_return_empty_dictionary(
         self,
@@ -228,6 +236,66 @@ class TestMain:
         assert mock_employees[4].department == "AR"
         assert mock_employees[4].job_title == "Reimbursement Specialist"
 
+    def test_change_employee_should_display_error_if_no_employees_exist(self) -> None:
+        change_employee({})
+        captured = self.capsys.readouterr()
+        assert captured.out.count("ERROR: No employees exist.") == 1
+
+    def test_change_employee_should_raise_error_when_employee_does_not_exist(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        def mock_input(prompt: str) -> str:
+            assert prompt == "Enter an employee ID: "
+            return "1"
+
+        monkeypatch.setattr("builtins.input", mock_input)
+
+        mock_employees: dict[int, Employee] = {
+            2: Employee("Susan Meyers", "Accounting", "Vice President"),
+            3: Employee("Mark Jones", "IT", "Programmer"),
+            4: Employee("Joy Rogers", "Manufacturing", "Engineer"),
+        }
+
+        change_employee(mock_employees)
+
+        captured = self.capsys.readouterr()
+        assert captured.out.count("ERROR: Employee 1 does not exist.") == 1
+
+    def test_change_employee_should_edit_employee_data(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        inputs = iter(["1", "Susan Smith", "Marketing", "President"])
+
+        def mock_input(prompt: str) -> str:
+            if "id" in prompt:
+                assert prompt == "Enter an employee ID: "
+            elif "name" in prompt:
+                assert prompt == "New name: "
+            elif "department" in prompt:
+                assert prompt == "New department: "
+            elif "job_title" in prompt:
+                assert prompt == "New job title: "
+
+            return next(inputs)
+
+        monkeypatch.setattr("builtins.input", mock_input)
+
+        mock_employees = {
+            1: Employee("Susan Meyers", "Accounting", "Vice President"),
+            2: Employee("Mark Jones", "IT", "Programmer"),
+            3: Employee("Joy Rogers", "Manufacturing", "Engineer"),
+        }
+
+        assert mock_employees[1].name == "Susan Meyers"
+        assert mock_employees[1].department == "Accounting"
+        assert mock_employees[1].job_title == "Vice President"
+
+        change_employee(mock_employees)
+
+        assert mock_employees[1].name == "Susan Smith"
+        assert mock_employees[1].department == "Marketing"
+        assert mock_employees[1].job_title == "President"
+
     def test_menu_exit_option_should_exit(
         self, mock_load_employees: Any, mock_open_file: Any, monkeypatch: MonkeyPatch
     ) -> None:
@@ -276,10 +344,11 @@ class TestMain:
     def test_main_menu_options_should_output_menu_items_correctly(
         self,
         choice: list[str],
+        mock_add_employee: Any,
+        mock_change_employee: Any,
         mock_load_employees: Any,
         mock_lookup_employee: Any,
         mock_save_employees: Any,
-        mock_add_employee: Any,
         monkeypatch: MonkeyPatch,
     ) -> None:
         inputs = iter([choice, "5"])
