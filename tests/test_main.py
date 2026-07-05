@@ -6,7 +6,7 @@ from unittest.mock import call, mock_open, patch
 import pytest
 from pytest import CaptureFixture, MonkeyPatch
 
-from app.main import load_employees, main
+from app.main import load_employees, lookup_employee, main, save_employees
 from app.models.employee import Employee
 
 
@@ -14,19 +14,6 @@ class TestMain:
     @pytest.fixture(autouse=True)
     def _capsys(self, capsys: CaptureFixture[str]) -> None:
         self.capsys = capsys
-
-    @pytest.fixture
-    def mock_employees(self, monkeypatch: MonkeyPatch) -> None:
-        mock_employees: dict[int, Employee] = {
-            1: Employee("Susan Meyers", "Accounting", "Vice President"),
-            2: Employee("Mark Jones", "IT", "Programmer"),
-            3: Employee("Joy Rogers", "Manufacturing", "Engineer"),
-        }
-
-        def mock_load_employees():
-            return mock_employees
-
-        monkeypatch.setattr("app.main.load_employees", mock_load_employees)
 
     @pytest.fixture
     def mock_csv_data(self, monkeypatch: MonkeyPatch) -> None:
@@ -42,10 +29,35 @@ class TestMain:
         monkeypatch.setattr(csv, "reader", mock_csv_reader)
 
     @pytest.fixture
+    def mock_load_employees(self, monkeypatch: MonkeyPatch) -> dict[int, Employee]:
+        mock_employees: dict[int, Employee] = {}
+
+        def mock_load_employees():
+            return mock_employees
+
+        monkeypatch.setattr("app.main.load_employees", mock_load_employees)
+
+        return mock_employees
+
+    @pytest.fixture
+    def mock_lookup_employee(self, monkeypatch: MonkeyPatch) -> Any:
+        def mock_lookup_employee(employees: dict[int, Employee]):
+            pass
+
+        monkeypatch.setattr("app.main.lookup_employee", mock_lookup_employee)
+
+    @pytest.fixture
     def mock_open_file(self, monkeypatch: MonkeyPatch) -> Any:
         mock_open_file = mock_open()
         monkeypatch.setattr(builtins, "open", mock_open_file)
         return mock_open_file
+
+    @pytest.fixture
+    def mock_save_employees(self, monkeypatch: MonkeyPatch) -> Any:
+        def mock_save_employees(employees: dict[int, Employee]):
+            pass
+
+        monkeypatch.setattr("app.main.save_employees", mock_save_employees)
 
     def test_load_employees_should_return_empty_dictionary(
         self,
@@ -77,31 +89,16 @@ class TestMain:
             "Name: Joy Rogers\nDepartment: Manufacturing\nJob Title: Engineer"
         )
 
-    @pytest.mark.parametrize("choice", ["1", "2", "3", "4"])
-    def test_process_menu_options(
-        self,
-        choice: list[str],
-        mock_employees: None,
-        mock_open_file: Any,
-        monkeypatch: MonkeyPatch,
+    def test_save_employees_should_write_employees_to_file(
+        self, mock_open_file: Any
     ) -> None:
-        inputs = iter([choice, "5"])
+        mock_employees: dict[int, Employee] = {
+            1: Employee("Susan Meyers", "Accounting", "Vice President"),
+            2: Employee("Mark Jones", "IT", "Programmer"),
+            3: Employee("Joy Rogers", "Manufacturing", "Engineer"),
+        }
 
-        def mock_input(prompt: str) -> str | list[str]:
-            assert prompt == "Enter your choice: "
-            return next(inputs)
-
-        monkeypatch.setattr("builtins.input", mock_input)
-
-        main()
-
-        captured = self.capsys.readouterr()
-        assert captured.out.count("Employee Management System") == 1
-        assert captured.out.count("1. Look up an employee") == 2
-        assert captured.out.count("2. Add new employee") == 2
-        assert captured.out.count("3. Edit employee") == 2
-        assert captured.out.count("4. Delete employee") == 2
-        assert captured.out.count("5. Exit") == 2
+        save_employees(mock_employees)
 
         mock_open_file.assert_called_once_with("employees.csv", "w")
         assert mock_open_file().write.call_count == 3
@@ -114,8 +111,61 @@ class TestMain:
 
         mock_open_file().write.assert_has_calls(expected_calls, any_order=False)
 
-    def test_menu_exit_option_should_exit(
-        self, mock_employees: None, mock_open_file: Any, monkeypatch: MonkeyPatch
+    def test_lookup_employee_should_display_error_if_no_employees_exist(self) -> None:
+        lookup_employee({})
+        captured = self.capsys.readouterr()
+        assert captured.out.count("ERROR: No employees exist.") == 1
+
+    def test_lookup_employee_should_raise_error_when_employee_does_not_exist(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        def mock_input(prompt: str) -> str:
+            assert prompt == "Enter an employee ID: "
+            return "1"
+
+        monkeypatch.setattr("builtins.input", mock_input)
+
+        mock_employees: dict[int, Employee] = {
+            2: Employee("Susan Meyers", "Accounting", "Vice President"),
+            3: Employee("Mark Jones", "IT", "Programmer"),
+            4: Employee("Joy Rogers", "Manufacturing", "Engineer"),
+        }
+
+        lookup_employee(mock_employees)
+
+        captured = self.capsys.readouterr()
+        assert captured.out.count("ERROR: Employee 1 does not exist.") == 1
+
+    def test_lookup_employee_should_successfully_lookup_employee(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        def mock_input(prompt: str) -> str:
+            assert prompt == "Enter an employee ID: "
+            return "1"
+
+        monkeypatch.setattr("builtins.input", mock_input)
+
+        mock_employees: dict[int, Employee] = {
+            1: Employee("Susan Meyers", "Accounting", "Vice President"),
+            2: Employee("Mark Jones", "IT", "Programmer"),
+            3: Employee("Joy Rogers", "Manufacturing", "Engineer"),
+        }
+
+        lookup_employee(mock_employees)
+
+        captured = self.capsys.readouterr()
+        assert (
+            captured.out.count(
+                "Name: Susan Meyers\nDepartment: Accounting\nJob Title: Vice President"
+            )
+            == 1
+        )
+
+    def test_main_menu_exit_option_should_exit(
+        self,
+        mock_load_employees: Any,
+        mock_save_employees: Any,
+        monkeypatch: MonkeyPatch,
     ) -> None:
         def mock_input(prompt: str) -> str:
             assert prompt == "Enter your choice: "
@@ -133,19 +183,11 @@ class TestMain:
         assert captured.out.count("4. Delete employee") == 1
         assert captured.out.count("5. Exit") == 1
 
-        mock_open_file.assert_called_once_with("employees.csv", "w")
-        assert mock_open_file().write.call_count == 3
-
-        expected_calls = [
-            call("1,Susan Meyers,Accounting,Vice President\n"),
-            call("2,Mark Jones,IT,Programmer\n"),
-            call("3,Joy Rogers,Manufacturing,Engineer\n"),
-        ]
-
-        mock_open_file().write.assert_has_calls(expected_calls, any_order=False)
-
-    def test_invalid_menu_option_input_should_display_error_message(
-        self, mock_employees: None, mock_open_file: Any, monkeypatch: MonkeyPatch
+    def test_invalid_menu_option_input_should_display_error_message_and_display_menu(
+        self,
+        mock_load_employees: Any,
+        mock_save_employees: Any,
+        monkeypatch: MonkeyPatch,
     ) -> None:
         inputs = iter(["0", "5"])
 
@@ -166,13 +208,29 @@ class TestMain:
         assert captured.out.count("4. Delete employee") == 2
         assert captured.out.count("5. Exit") == 2
 
-        mock_open_file.assert_called_once_with("employees.csv", "w")
-        assert mock_open_file().write.call_count == 3
+    @pytest.mark.parametrize("choice", ["1", "2", "3", "4"])
+    def test_main_menu_options_should_output_menu_items_correctly(
+        self,
+        choice: list[str],
+        mock_load_employees: Any,
+        mock_lookup_employee: Any,
+        mock_save_employees: Any,
+        monkeypatch: MonkeyPatch,
+    ) -> None:
+        inputs = iter([choice, "5"])
 
-        expected_calls = [
-            call("1,Susan Meyers,Accounting,Vice President\n"),
-            call("2,Mark Jones,IT,Programmer\n"),
-            call("3,Joy Rogers,Manufacturing,Engineer\n"),
-        ]
+        def mock_input(prompt: str) -> str | list[str]:
+            assert prompt == "Enter your choice: "
+            return next(inputs)
 
-        mock_open_file().write.assert_has_calls(expected_calls, any_order=False)
+        monkeypatch.setattr("builtins.input", mock_input)
+
+        main()
+
+        captured = self.capsys.readouterr()
+        assert captured.out.count("Employee Management System") == 1
+        assert captured.out.count("1. Look up an employee") == 2
+        assert captured.out.count("2. Add new employee") == 2
+        assert captured.out.count("3. Edit employee") == 2
+        assert captured.out.count("4. Delete employee") == 2
+        assert captured.out.count("5. Exit") == 2
