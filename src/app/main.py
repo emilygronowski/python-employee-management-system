@@ -1,15 +1,34 @@
+import csv
+
 from app.models.employee import Employee
 
 
 def load_employees() -> dict[int, Employee]:
-    return {}
+    employees: dict[int, Employee] = {}
+
+    try:
+        with open("employees.csv", newline="") as data:
+            reader = csv.reader(data)
+
+            for row in reader:
+                id = row[0]
+                name = row[1]
+                department = row[2]
+                job_title = row[3]
+
+                employees[int(id)] = Employee(name, department, job_title)
+
+    except FileNotFoundError:
+        pass
+
+    return employees
 
 
 def save_employees(employees: dict[int, Employee]) -> None:
-    with open("employees.csv", "w") as employees_file:
-        for key, value in employees.items():
-            employees_file.write(
-                f"{key},{value.name},{value.department},{value.job_title}\n"
+    with open("employees.csv", "w") as file:
+        for id, employee in employees.items():
+            file.write(
+                f"{id},{employee.name},{employee.department},{employee.job_title}\n"
             )
 
 
