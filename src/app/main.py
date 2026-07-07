@@ -68,6 +68,33 @@ def add_employee(employees: dict[int, Employee]) -> None:
     employees[id] = Employee(name, department, job_title)
 
 
+def change_employee(employees: dict[int, Employee]) -> None:
+    if not employees:
+        print("ERROR: No employees exist.")
+        return
+
+    id = int(input("Enter an employee ID: "))
+
+    if id not in employees:
+        print()
+        print(f"ERROR: Employee {id} does not exist.")
+        return
+
+    employee = employees[id]
+
+    print()
+    print(f"Current name: {employee.name}")
+    employee.name = input("New name: ")
+
+    print()
+    print(f"Current department: {employee.department}")
+    employee.department = input("New department: ")
+
+    print()
+    print(f"Current job title: {employee.job_title}")
+    employee.job_title = input("New job title: ")
+
+
 def main() -> None:
     employees = load_employees()
     print("Employee Management System")
@@ -89,7 +116,8 @@ def main() -> None:
                 print()
                 add_employee(employees)
             case "3":
-                pass
+                print()
+                change_employee(employees)
             case "4":
                 pass
             case "5":
