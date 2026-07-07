@@ -6,7 +6,14 @@ from unittest.mock import call, mock_open, patch
 import pytest
 from pytest import CaptureFixture, MonkeyPatch
 
-from app.main import load_employees, lookup_employee, main, save_employees
+from app.main import (
+    add_employee,
+    find_available_id,
+    load_employees,
+    lookup_employee,
+    main,
+    save_employees,
+)
 from app.models.employee import Employee
 
 
@@ -58,6 +65,13 @@ class TestMain:
             pass
 
         monkeypatch.setattr("app.main.save_employees", mock_save_employees)
+
+    @pytest.fixture
+    def mock_add_employee(self, monkeypatch: MonkeyPatch) -> Any:
+        def mock_add_employee(employees: dict[int, Employee]):
+            pass
+
+        monkeypatch.setattr("app.main.add_employee", mock_add_employee)
 
     def test_load_employees_should_return_empty_dictionary(
         self,
@@ -161,11 +175,61 @@ class TestMain:
             == 1
         )
 
-    def test_main_menu_exit_option_should_exit(
-        self,
-        mock_load_employees: Any,
-        mock_save_employees: Any,
-        monkeypatch: MonkeyPatch,
+    def test_find_available_id_should_be_correct_before_insertion(self) -> None:
+        mock_employees = {
+            1: Employee("Susan Meyers", "Accounting", "Vice President"),
+            2: Employee("Mark Jones", "IT", "Programmer"),
+            3: Employee("Joy Rogers", "Manufacturing", "Engineer"),
+        }
+
+        id = find_available_id(mock_employees)
+        assert id == 4
+
+    def test_find_available_id_should_return_proper_id_to_reuse(self) -> None:
+        mock_employees = {
+            4: Employee("Joy Rogers", "Manufacturing", "Engineer"),
+            1: Employee("Susan Meyers", "Accounting", "Vice President"),
+            3: Employee("Mark Jones", "IT", "Programmer"),
+        }
+
+        assert find_available_id(mock_employees) == 2
+
+    def test_add_employee_should_add_employee_with_proper_id(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        inputs = iter(["Sandy Smith", "AR", "Reimbursement Specialist"])
+
+        def mock_input(prompt: str) -> str:
+            if "name" in prompt:
+                assert prompt == "Enter employee name: "
+            elif "department" in prompt:
+                assert prompt == "Enter department: "
+            elif "job_title" in prompt:
+                assert prompt == "Enter job title: "
+
+            return next(inputs)
+
+        monkeypatch.setattr("builtins.input", mock_input)
+
+        mock_employees = {
+            1: Employee("Susan Meyers", "Accounting", "Vice President"),
+            2: Employee("Mark Jones", "IT", "Programmer"),
+            3: Employee("Joy Rogers", "Manufacturing", "Engineer"),
+        }
+
+        assert len(mock_employees) == 3
+        assert 4 not in mock_employees
+
+        add_employee(mock_employees)
+
+        assert len(mock_employees) == 4
+        assert 4 in mock_employees
+        assert mock_employees[4].name == "Sandy Smith"
+        assert mock_employees[4].department == "AR"
+        assert mock_employees[4].job_title == "Reimbursement Specialist"
+
+    def test_menu_exit_option_should_exit(
+        self, mock_load_employees: Any, mock_open_file: Any, monkeypatch: MonkeyPatch
     ) -> None:
         def mock_input(prompt: str) -> str:
             assert prompt == "Enter your choice: "
@@ -215,6 +279,7 @@ class TestMain:
         mock_load_employees: Any,
         mock_lookup_employee: Any,
         mock_save_employees: Any,
+        mock_add_employee: Any,
         monkeypatch: MonkeyPatch,
     ) -> None:
         inputs = iter([choice, "5"])
