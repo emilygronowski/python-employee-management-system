@@ -3,7 +3,7 @@ import csv
 from app.models.employee import Employee
 
 
-def load_employees() -> dict[int, Employee]:
+def load_employees() -> dict[int, Employee] | None:
     employees: dict[int, Employee] = {}
 
     try:
@@ -12,6 +12,18 @@ def load_employees() -> dict[int, Employee]:
 
             for row in reader:
                 id = row[0]
+
+                try:
+                    id = int(id)
+
+                except ValueError:
+                    print(
+                        f"FATAL: Expected first field to be an integer employee ID "
+                        f"however received {row[0]} instead."
+                        f"Please fix input file and restart program."
+                    )
+                    return None
+
                 name = row[1]
                 department = row[2]
                 job_title = row[3]
@@ -110,6 +122,9 @@ def delete_employee(employees: dict[int, Employee]) -> None:
 
 def main() -> None:
     employees = load_employees()
+    if employees is None:
+        return
+
     print("Employee Management System")
 
     while True:

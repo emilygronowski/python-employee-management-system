@@ -59,6 +59,19 @@ class TestMain:
         monkeypatch.setattr("app.main.delete_employee", mock_delete_employee)
 
     @pytest.fixture
+    def mock_incorrect_csv_data(self, monkeypatch: MonkeyPatch) -> None:
+        mock_incorrect_data = [
+            ["1", "Susan Meyers", "Accounting", "Vice President"],
+            ["2", "Mark Jones", "IT", "Programmer"],
+            ["Joy Rodgers", "3", "Manufacturing", "Engineer"],
+        ]
+
+        def mock_incorrect_csv_reader(data: Any):
+            return mock_incorrect_data
+
+        monkeypatch.setattr(csv, "reader", mock_incorrect_csv_reader)
+
+    @pytest.fixture
     def mock_load_employees(self, monkeypatch: MonkeyPatch) -> dict[int, Employee]:
         mock_employees: dict[int, Employee] = {}
 
@@ -68,6 +81,13 @@ class TestMain:
         monkeypatch.setattr("app.main.load_employees", mock_load_employees)
 
         return mock_employees
+
+    @pytest.fixture
+    def mock_load_employees_returns_none(self, monkeypatch: MonkeyPatch) -> None:
+        def mock_load_employees() -> None:
+            return None
+
+        monkeypatch.setattr("app.main.load_employees", mock_load_employees)
 
     @pytest.fixture
     def mock_lookup_employee(self, monkeypatch: MonkeyPatch) -> Any:
@@ -103,10 +123,31 @@ class TestMain:
             employees = load_employees()
             assert not employees
 
+    def test_load_employees_should_exit_program_if_first_field_is_not_id(
+        self,
+        mock_incorrect_csv_data: Any,
+        mock_open_file: Any,
+        monkeypatch: MonkeyPatch,
+    ) -> None:
+        employees = load_employees()
+
+        captured = self.capsys.readouterr()
+
+        assert not employees
+        assert (
+            captured.out.count(
+                "FATAL: Expected first field to be an integer employee ID "
+                "however received Joy Rodgers instead."
+                "Please fix input file and restart program."
+            )
+            == 1
+        )
+
     def test_load_employees_should_add_csv_data_entries_to_dictionary(
         self, mock_csv_data: Any, mock_open_file: Any, monkeypatch: MonkeyPatch
     ) -> None:
         employees = load_employees()
+        assert employees is not None
 
         assert len(employees) == 3
         assert str(employees[1]) == (
@@ -118,6 +159,16 @@ class TestMain:
         assert str(employees[3]) == (
             "Name: Joy Rogers\nDepartment: Manufacturing\nJob Title: Engineer"
         )
+
+    def test_main_should_return_when_load_employees_returns_none(
+        self,
+        mock_load_employees_returns_none: Any,
+    ) -> None:
+        main()
+
+        captured = self.capsys.readouterr()
+
+        assert captured.out == ""
 
     def test_save_employees_should_write_employees_to_file(
         self, mock_open_file: Any
@@ -377,6 +428,7 @@ class TestMain:
         mock_save_employees: Any,
         monkeypatch: MonkeyPatch,
     ) -> None:
+
         inputs = iter(["0", "5"])
 
         def mock_input(prompt: str) -> str:
