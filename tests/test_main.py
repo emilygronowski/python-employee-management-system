@@ -9,6 +9,7 @@ from pytest import CaptureFixture, MonkeyPatch
 from app.main import (
     add_employee,
     change_employee,
+    delete_employee,
     find_available_id,
     load_employees,
     lookup_employee,
@@ -49,6 +50,13 @@ class TestMain:
             return mock_data
 
         monkeypatch.setattr(csv, "reader", mock_csv_reader)
+
+    @pytest.fixture
+    def mock_delete_employee(self, monkeypatch: MonkeyPatch) -> Any:
+        def mock_delete_employee(employees: dict[int, Employee]):
+            pass
+
+        monkeypatch.setattr("app.main.delete_employee", mock_delete_employee)
 
     @pytest.fixture
     def mock_load_employees(self, monkeypatch: MonkeyPatch) -> dict[int, Employee]:
@@ -296,6 +304,54 @@ class TestMain:
         assert mock_employees[1].department == "Marketing"
         assert mock_employees[1].job_title == "President"
 
+    def test_delete_employee_should_display_error_if_no_employees_exist(self) -> None:
+        delete_employee({})
+        captured = self.capsys.readouterr()
+        assert captured.out.count("ERROR: No employees exist.") == 1
+
+    def test_delete_employee_should_raise_error_when_employee_does_not_exist(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        def mock_input(prompt: str) -> str:
+            assert prompt == "Enter an employee ID: "
+            return "1"
+
+        monkeypatch.setattr("builtins.input", mock_input)
+
+        mock_employees: dict[int, Employee] = {
+            2: Employee("Susan Meyers", "Accounting", "Vice President"),
+            3: Employee("Mark Jones", "IT", "Programmer"),
+            4: Employee("Joy Rogers", "Manufacturing", "Engineer"),
+        }
+
+        delete_employee(mock_employees)
+
+        captured = self.capsys.readouterr()
+        assert captured.out.count("ERROR: Employee 1 does not exist.") == 1
+
+    def test_delete_employee_should_delete_employee_data(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        def mock_input(prompt: str) -> str:
+            assert prompt == "Enter an employee ID: "
+            return "1"
+
+        monkeypatch.setattr("builtins.input", mock_input)
+
+        mock_employees: dict[int, Employee] = {
+            1: Employee("Susan Meyers", "Accounting", "Vice President"),
+            2: Employee("Mark Jones", "IT", "Programmer"),
+            3: Employee("Joy Rogers", "Manufacturing", "Engineer"),
+        }
+
+        assert len(mock_employees) == 3
+        assert mock_employees.keys() == {1, 2, 3}
+
+        delete_employee(mock_employees)
+
+        assert len(mock_employees) == 2
+        assert mock_employees.keys() == {2, 3}
+
     def test_menu_exit_option_should_exit(
         self, mock_load_employees: Any, mock_open_file: Any, monkeypatch: MonkeyPatch
     ) -> None:
@@ -346,6 +402,7 @@ class TestMain:
         choice: list[str],
         mock_add_employee: Any,
         mock_change_employee: Any,
+        mock_delete_employee: Any,
         mock_load_employees: Any,
         mock_lookup_employee: Any,
         mock_save_employees: Any,
